@@ -1,4 +1,4 @@
-## M1 Endpoints
+## M1 API
 Access M1 Finance functionalities via API
 
 #todos

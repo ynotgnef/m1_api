@@ -1,0 +1,44 @@
+intial_setup:
+  title: Initial Setup
+  date: 12-29-2018
+  content: >
+    "
+    Completed:
+      - set up boilerplate Ruby gem project
+      - wrote unit tests for yaml utility methods
+      - started working on yaml utility methods
+
+    Setting this project up as a way to document and run M1 Finance APIs.
+    I went through the web app today with Postman interception turned on,
+    and captured a bunch of relevant calls (authentication, deposit,
+    cancel deposit, etc). There were no problems using them in subsequent
+    calls, so using the calls through this gem should be pretty pain free.
+
+    The APIs will probably change at some point, which is going to make
+    maintenance a huge pain. To make things easier, I'm going to 1)
+    maintain APIs as configurations AND 2) set up some sort of Postman
+    integration to semi-automate the capture of the API calls.
+
+    API configurations are going to live in ./lib/m1_api/api_configs.yml,
+    instead of in the code itself. The code will then parse those configs,
+    plug in any dynamic values, and then make the call. This is more work up
+    front, but I suspect this is easier to maintain when APIs change.
+    Personally, adding new API calls is easier with this approach. The
+    parsing is also platform agnostic, which is a plus.
+    "
+config_parsing_and_auth:
+  title: Config Parsing and Authenication
+  date: 12-30-2018
+  content: >
+    "
+    Completed:
+      - finished V1 yaml utility methods
+      - finshed unit test for authentication
+      - finished authentication methods
+
+    Authentication works! Tricky thing was the X-Client-Sentinel value in
+    headers, which turned out to be just the time of when the call was made.
+    All unit pass, and authentication returns a token that can be used for other
+    calls. Should be smooth sailing for other calls. Next step will be do to
+    an initial build of the gem.
+    "

@@ -1,0 +1,38 @@
+:base_url: &base_url
+  - https://lens.m1finance.com/graphql
+
+:common_headers: &common_headers
+  :Origin: https://dashboard.m1finance.com
+  :User-Agent: Mozilla/5.0 (X11; CrOS x86_64 11021.81.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36
+  :Content-Type: application/json
+  :Accept-Encoding: gzip, deflate, br
+  :Accept-Language: en-GB,en-US;q=0.9,en;q=0.8
+  :X-Client-Id: m1-web/3.18.9 #might have to update in real time
+  :X-Client-Sentinel: <%= ((Time.new).to_i * 1000).to_s %>
+
+:authenticate:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Accept: application/json
+    :Referer: https://dashboard.m1finance.com/login
+    <<:
+      *common_headers
+  :body: '{"query":"\n      mutation M($input: AuthenticateInput!) {\n        authenticate(input: $input) {\n      result {\n        didSucceed\n        inputError\n      }\n      accessToken\n      refreshToken\n      viewer {\n        user {\n          id\n          correlationKey\n        }\n      }\n    }\n      }\n    ","variables":{"input":{"clientMutationId":"authenticate19","username":"<<<username>>>","password":"<<<password>>>"}}}'
+
+
+:check_status:
+  :method:
+  :url: *base_url
+
+:deposit:
+  :method:
+  :url: *base_url
+
+:cancel_deposit:
+  :method:
+  :url: *base_url
+  
+:test_get:
+  :method: get
+  :url: https://google.com
