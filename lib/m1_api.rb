@@ -4,14 +4,21 @@ require 'yaml'
 require 'erb'
 
 ###
-### have to change yml paths to be relative from gem
-###
+### change it to just authenticate once and use the same token
+
 
 module M1API
 #  autoload :CLI, 'm1_api/cli'
   autoload :VERSION, 'm1_api/version'
 
   class << self
+
+    @@api_config_file = "#{__dir__}/m1_api/api_configs.yml"
+
+    def define_custom_api_file(path)
+      @@api_config_file = path
+    end
+
     def read_credentials(credentials_file=nil)
       if credentials_file
         credentials = load_yaml(credentials_file)
@@ -86,15 +93,35 @@ module M1API
       params.delete(nil)
       res = RestClient.send(*params)
       { code: res.code, body: JSON.parse(res.body) }
-    rescue
-      { code: res.code, body: res.body }
+    rescue Exception => e
+      return { code: res.code, body: res.body } if res
+      puts "failed to call api for api #{api}: #{e}"
     end
     
     def authenticate(credentials_file = nil)
       credentials = read_credentials(credentials_file)
-      res = call_api_from_yml('./lib/m1_api/api_configs.yml', 'authenticate', credentials)
+      res = call_api_from_yml(@@api_config_file, 'authenticate', credentials)
       raise "failed to authenticate:\n\t#{res}" unless res[:code] == 200 && res[:body]['data']['authenticate']['result']['didSucceed']
       res[:body]['data']['authenticate']['accessToken']
+    end
+
+    def check_status(token)
+      token = { token: token }
+      res = call_api_from_yml(@@api_config_file, 'check_status', token)
+      puts res.inspect
+    end
+
+    def query_accounts(token)
+      accounts = {}
+      data = { token: token }
+      id_res = call_api_from_yml(@@api_config_file, 'list_account_ids', data)
+      ids = id_res[:body]['data']['viewer']['_accounts1NFCow']['edges'].map { |account| account['node']['id'] }
+      ids.each do |id|
+        data[:account_id] = id
+        account_res = call_api_from_yml(@@api_config_file, 'query_account', data)
+        accounts[id] = account_res[:body]['data']['node']
+      end
+      accounts
     end
   end
 end

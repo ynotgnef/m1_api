@@ -111,4 +111,16 @@ RSpec.describe M1API do
       end
     end
   end
+
+  describe '.query_accounts' do
+    context 'user has valid credentials defined in ENV' do
+      it 'outputs a list of accounts associated with the account' do
+        token = M1API.authenticate
+        output = M1API.query_accounts(token)
+        output.each do |id, data|
+          expect(id).to eq data['id']
+        end
+      end
+    end
+  end
 end

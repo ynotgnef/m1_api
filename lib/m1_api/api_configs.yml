@@ -7,7 +7,7 @@
   :Content-Type: application/json
   :Accept-Encoding: gzip, deflate, br
   :Accept-Language: en-GB,en-US;q=0.9,en;q=0.8
-  :X-Client-Id: m1-web/3.18.9 #might have to update in real time
+  :X-Client-Id: m1-web/3.20.1 #might have to update in real time
   :X-Client-Sentinel: <%= ((Time.new).to_i * 1000).to_s %>
 
 :authenticate:
@@ -16,23 +16,51 @@
   :headers:
     :Accept: application/json
     :Referer: https://dashboard.m1finance.com/login
-    <<:
-      *common_headers
+    <<: *common_headers
   :body: '{"query":"\n      mutation M($input: AuthenticateInput!) {\n        authenticate(input: $input) {\n      result {\n        didSucceed\n        inputError\n      }\n      accessToken\n      refreshToken\n      viewer {\n        user {\n          id\n          correlationKey\n        }\n      }\n    }\n      }\n    ","variables":{"input":{"clientMutationId":"authenticate19","username":"<<<username>>>","password":"<<<password>>>"}}}'
 
+:list_account_ids:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Authorization: Bearer <<<token>>>
+    :Accept: '*/*'
+    :Referer: https://dashboard.m1finance.com/login
+    <<: *common_headers
+  :body: '{"query":"query Active($first_0:Int!,$filterStatus_1:[AccountStatusEnum!]!) {viewer {_accounts1NFCow:accounts(first:$first_0,filterStatus:$filterStatus_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}},id}}","variables":{"first_0":1,"filterStatus_1":["NEW","OPENED","REJECTED"]}}'
+
+:query_account:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Authorization: Bearer <<<token>>>
+    :Accept: '*/*'
+    :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
+    <<: *common_headers
+  :body: '{"query":"query Routes($id_0:ID!) {node(id:$id_0) {id,__typename,...F1}} fragment F0 on Account {isRetirement,achTransferLimit,lastAchRelationship {id,nickname,__typename},balance {totalValue {value}},id} fragment F1 on Account {registration,id,...F0}","variables":{"id_0":"<<<account_id>>>"}}'
+
+:deposit:
+  :method:
+  :url: *base_url
+  :headers:
+    :Accept: application/json
+    :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
+    :Authorization: Bearer <<<token>>>
+  :body: '{"query":"mutation CreateImmediateAchDeposit($input_0:CreateImmediateAchDepositInput!,$first_1:Int!) {createImmediateAchDeposit(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {lastAchRelationship {__typename,status,id,isActive,nickname},id,rootPortfolioSlice {id},estimatedTrading {id,hasTrades},_achTransferSchedules2RSrrY:achTransferSchedules(first:$first_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}}} fragment F1 on CreateImmediateAchDepositPayload {account {id,...F0}} fragment F2 on CreateImmediateAchDepositPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"QUNDOjVRTTM1NTUz","achRelationshipId":"UkVMOjVRTTM1NTUzLDQ3ZDYzYzdhLTI1ZWItNDkzZC1hMzRhLWQzNTE4MGRjNzFkZg==","amount":"<<<deposit_amount>>>","clientMutationId":"1"},"first_1":1}}'
+
+:cancel_deposit:
+  :method:
+  :url: *base_url
+  :headers:
+    :Accept: application/json
+    :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
+    :Authorization: Bearer <<<token>>>
+  :body: ''
 
 :check_status:
   :method:
   :url: *base_url
 
-:deposit:
-  :method:
-  :url: *base_url
-
-:cancel_deposit:
-  :method:
-  :url: *base_url
-  
 :test_get:
   :method: get
   :url: https://google.com

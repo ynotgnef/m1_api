@@ -42,3 +42,10 @@ config_parsing_and_auth:
     calls. Should be smooth sailing for other calls. Next step will be do to
     an initial build of the gem.
     "
+query_accounts:
+    title: Querying accounts and initial build of gem
+    date: 1-5-2018
+    content: >
+      "
+      Completed:
+      "
