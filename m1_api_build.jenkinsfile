@@ -1,0 +1,53 @@
+pipeline {
+    agent { label 'medium' }
+
+    parameters {
+        string(name: 'GIT_BRANCH', defaultValue: 'master', description: '', trim: false)
+    }
+
+    stages {
+        stage('setup') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "${params.GIT_BRANCH}"]],
+                    userRemoteConfigs: [[
+                        credentialsId: 'github',
+                        url: 'https://github.com/ynotgnef/m1_api.git'
+                    ]]
+                ])
+                sh '''#!/bin/bash -l
+                  bundle install
+                  gem install bundler
+                '''
+            }
+        }
+        stage('test') {
+            steps {
+                sh '''#!/bin/bash -l
+                    rspec
+                '''
+            }
+        }
+        stage('build_gem') {
+            steps {
+                withCredentials([file(credentialsId: 'rubygems_key', variable: 'rubygems_key')]) {
+                  sh '''#!/bin/bash -l
+                    
+                  '''
+                }
+            }
+        }
+        stage('upload_to_rubygems') {
+            steps {
+                echo 'wait_for_approval'
+            }
+        }
+        stage('send_notification') {
+            steps {
+                echo 'execute_position'
+            }
+
+        }
+    }
+}
