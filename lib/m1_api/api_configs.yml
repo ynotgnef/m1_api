@@ -46,7 +46,7 @@
     :Accept: application/json
     :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
     :Authorization: Bearer <<<token>>>
-  :body: '{"query":"mutation CreateImmediateAchDeposit($input_0:CreateImmediateAchDepositInput!,$first_1:Int!) {createImmediateAchDeposit(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {lastAchRelationship {__typename,status,id,isActive,nickname},id,rootPortfolioSlice {id},estimatedTrading {id,hasTrades},_achTransferSchedules2RSrrY:achTransferSchedules(first:$first_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}}} fragment F1 on CreateImmediateAchDepositPayload {account {id,...F0}} fragment F2 on CreateImmediateAchDepositPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"QUNDOjVRTTM1NTUz","achRelationshipId":"UkVMOjVRTTM1NTUzLDQ3ZDYzYzdhLTI1ZWItNDkzZC1hMzRhLWQzNTE4MGRjNzFkZg==","amount":"<<<deposit_amount>>>","clientMutationId":"1"},"first_1":1}}'
+  :body: '{"query":"mutation CreateImmediateAchDeposit($input_0:CreateImmediateAchDepositInput!,$first_1:Int!) {createImmediateAchDeposit(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {lastAchRelationship {__typename,status,id,isActive,nickname},id,rootPortfolioSlice {id},estimatedTrading {id,hasTrades},_achTransferSchedules2RSrrY:achTransferSchedules(first:$first_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}}} fragment F1 on CreateImmediateAchDepositPayload {account {id,...F0}} fragment F2 on CreateImmediateAchDepositPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","amount":"<<<deposit_amount>>>","clientMutationId":"1"},"first_1":1}}'
 
 :cancel_deposit:
   :method:
