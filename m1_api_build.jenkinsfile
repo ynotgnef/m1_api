@@ -1,53 +1,44 @@
 pipeline {
-    agent { label 'medium' }
+  agent { label 'medium' }
 
-    parameters {
-        string(name: 'GIT_BRANCH', defaultValue: 'master', description: '', trim: false)
-    }
+  parameters {
+      string(name: 'GIT_BRANCH', defaultValue: 'master', description: '', trim: false)
+  }
 
-    stages {
-        stage('setup') {
-            steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: "${params.GIT_BRANCH}"]],
-                    userRemoteConfigs: [[
-                        credentialsId: 'github',
-                        url: 'https://github.com/ynotgnef/m1_api.git'
-                    ]]
-                ])
+  stages {
+      stage('setup') {
+          steps {
+              checkout([
+                  $class: 'GitSCM',
+                  branches: [[name: "${params.GIT_BRANCH}"]],
+                  userRemoteConfigs: [[
+                      credentialsId: 'github',
+                      url: 'https://github.com/ynotgnef/m1_api.git'
+                  ]]
+              ])
+              sh '''#!/bin/bash -l
+                gem install bundler
+                bundle install
+              '''
+          }
+      }
+      stage('test') {
+          steps {
+              sh '''#!/bin/bash -l
+                  rspec
+              '''
+          }
+      }
+      stage('build_and push') {
+          steps {
+              withCredentials([file(credentialsId: 'rubygems_key', variable: 'rubygems_key')]) {
                 sh '''#!/bin/bash -l
-                  bundle install
-                  gem install bundler
+                  cp $rubygems_key ~/.gem/credentials
+                  gem build m1_api.gemspec | tail -1 | cut -c 9- > a.txt
+                  gem push
                 '''
-            }
-        }
-        stage('test') {
-            steps {
-                sh '''#!/bin/bash -l
-                    rspec
-                '''
-            }
-        }
-        stage('build_gem') {
-            steps {
-                withCredentials([file(credentialsId: 'rubygems_key', variable: 'rubygems_key')]) {
-                  sh '''#!/bin/bash -l
-                    
-                  '''
-                }
-            }
-        }
-        stage('upload_to_rubygems') {
-            steps {
-                echo 'wait_for_approval'
-            }
-        }
-        stage('send_notification') {
-            steps {
-                echo 'execute_position'
-            }
-
-        }
-    }
+              }
+          }
+      }
+  }
 }

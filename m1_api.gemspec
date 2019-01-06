@@ -9,7 +9,7 @@ Gem::Specification.new name, M1API::VERSION do |s|
     s.files = Dir["{lib,bin}/**/*"] + ["Readme.md"]
     s.license = "MIT"
     #s.executables = ["m1_api_generate"]
-    s.add_runtime_dependency 'rest-client', '~> 0'
-    s.add_runtime_dependency 'json', '~> 0'
+    s.add_runtime_dependency 'rest-client', '~> 2.0.2'
+    s.add_runtime_dependency 'json', '~> 2.1.0'
     s.required_ruby_version = '>= 2.2.0'
   end
