@@ -2,43 +2,53 @@ pipeline {
   agent { label 'medium' }
 
   parameters {
-      string(name: 'GIT_BRANCH', defaultValue: 'master', description: '', trim: false)
+    string(name: 'GIT_BRANCH', defaultValue: 'master', description: '', trim: false)
   }
 
   stages {
-      stage('setup') {
-          steps {
-              checkout([
-                  $class: 'GitSCM',
-                  branches: [[name: "${params.GIT_BRANCH}"]],
-                  userRemoteConfigs: [[
-                      credentialsId: 'github',
-                      url: 'https://github.com/ynotgnef/m1_api.git'
-                  ]]
-              ])
-              sh '''#!/bin/bash -l
-                gem install bundler
-                bundle install
-              '''
-          }
+    stage('setup') {
+      steps {
+        checkout([
+          $class: 'GitSCM',
+          branches: [[name: "${params.GIT_BRANCH}"]],
+          userRemoteConfigs: [[
+            credentialsId: 'github',
+            url: 'https://github.com/ynotgnef/m1_api.git'
+          ]]
+        ])
+        ruby()
       }
-      stage('test') {
-          steps {
-              sh '''#!/bin/bash -l
-                  rspec
-              '''
-          }
+    }
+    stage('test') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'm1', passwordVariable: 'M1_PASSWORD', usernameVariable: 'M1_USERNAME')]) {
+          sh '''#!/bin/bash -l
+            rspec
+          '''
+        }
       }
-      stage('build_and push') {
-          steps {
-              withCredentials([file(credentialsId: 'rubygems_key', variable: 'rubygems_key')]) {
-                sh '''#!/bin/bash -l
-                  cp $rubygems_key ~/.gem/credentials
-                  gem build m1_api.gemspec | tail -1 | cut -c 9- > a.txt
-                  gem push
-                '''
-              }
-          }
+    }
+    stage('build_and push') {
+      steps {
+        withCredentials([file(credentialsId: 'rubygems_key', variable: 'rubygems_key')]) {
+          sh '''#!/bin/bash -l
+            sudo cp $rubygems_key ~/.gem/credentials
+            sudo chmod 0600 ~/.gem/credentials
+            gem build m1_api.gemspec | tail -1 | cut -c 9- > build_record.txt
+            gem push "$(< build_record.txt)"
+          '''
+        }
       }
+    }
   }
+}
+
+def ruby() {
+  sh '''#!/bin/bash -l
+    rvm install 2.5.2
+    rvm use 2.5.2
+    rm Gemfile.lock || true
+    gem install bundler
+    bundle install
+  '''
 }
