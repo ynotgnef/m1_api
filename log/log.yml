@@ -49,3 +49,18 @@ query_accounts:
       "
       Completed:
       "
+deposit_and_withdraw:
+  title: Depositing and withdrawing funds
+  date: 1-20-2019
+  content: >
+    "
+    Completed:
+      - method for account detail query
+      - methods for deposit and withdrawing funds
+      - unit tests
+    
+    Added enough calls for PoC, which is to automate deposits and withdraws based
+    on market conditions. Still need a way to autoregenerate the calls, which is
+    not limited to this platform. Also need to add checks to the unit tests to make
+    sure that tests are ready to be run based on account details.
+    "

@@ -35,7 +35,13 @@ module YamlHelpers
       raise 'input is not a array' unless array.is_a?(Array)
       dup = array.clone
       dup.each_with_index do |value, index|
-        dup[index] = replace_dynamic_string(value, context)
+        if value.is_a?(String)
+          dup[index] = replace_dynamic_string(value, context)
+        elsif value.is_a?(Array)
+          dup[index] = replace_dynamic_array(value, context)
+        elsif value.is_a?(Hash)
+          dup[index] = replace_dynamic_hash(value, context)
+        end
       end
       dup.join
     end
@@ -54,8 +60,8 @@ module YamlHelpers
       hash
     end
 
-    def call_api_from_yml(config_file, api, data = {})
-      config = load_yaml(config_file)[api.to_sym]
+    def call_api_from_config(configs, api, data = {})
+      config = configs[api].dup
       raise "no api defined for #{api}" unless config
       context = config.merge data
       parsed_config = replace_dynamic_hash(context)
@@ -66,5 +72,10 @@ module YamlHelpers
     rescue Exception => e
       return { code: res.code, body: res.body } if res
       puts "failed to call api for api #{api}: #{e}"
+    end
+
+    def call_api_from_yml(config_file, api, data = {})
+      configs = load_yaml(config_file)
+      call_api_from_config(configs, api, data)
     end
 end

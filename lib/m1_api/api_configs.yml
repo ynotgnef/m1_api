@@ -7,7 +7,7 @@
   :Content-Type: application/json
   :Accept-Encoding: gzip, deflate, br
   :Accept-Language: en-GB,en-US;q=0.9,en;q=0.8
-  :X-Client-Id: m1-web/3.20.1 #might have to update in real time
+  :X-Client-Id: m1-web/3.20.10 # changes regularly, hasn't broken anything yet
   :X-Client-Sentinel: <%= ((Time.new).to_i * 1000).to_s %>
 
 :authenticate:
@@ -17,8 +17,9 @@
     :Accept: application/json
     :Referer: https://dashboard.m1finance.com/login
     <<: *common_headers
-  :body: '{"query":"\n      mutation M($input: AuthenticateInput!) {\n        authenticate(input: $input) {\n      result {\n        didSucceed\n        inputError\n      }\n      accessToken\n      refreshToken\n      viewer {\n        user {\n          id\n          correlationKey\n        }\n      }\n    }\n      }\n    ","variables":{"input":{"clientMutationId":"authenticate19","username":"<<<username>>>","password":"<<<password>>>"}}}'
+  :body: '{"query":"mutation M($input: AuthenticateInput!) {authenticate(input: $input) {result {didSucceed inputError} accessToken refreshToken viewer {user {id correlationKey}}}} ","variables":{"input":{"clientMutationId":"authenticate19","username":"<<<username>>>","password":"<<<password>>>"}}}'
 
+# lists first 1000 accounts - need to paginate if there are more
 :list_account_ids:
   :method: post
   :url: *base_url
@@ -27,7 +28,7 @@
     :Accept: '*/*'
     :Referer: https://dashboard.m1finance.com/login
     <<: *common_headers
-  :body: '{"query":"query Active($first_0:Int!,$filterStatus_1:[AccountStatusEnum!]!) {viewer {_accounts1NFCow:accounts(first:$first_0,filterStatus:$filterStatus_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}},id}}","variables":{"first_0":1,"filterStatus_1":["NEW","OPENED","REJECTED"]}}'
+  :body: '{"query":"query Routes($first_0:Int!) {viewer {id,...F1}} fragment F0 on Account {nickname,id} fragment F1 on Viewer {profile {primary {firstName,lastName}},accounts:accounts(first:$first_0) {edges {node {id,...F0},cursor},pageInfo {hasNextPage,hasPreviousPage}},id}","variables":{"first_0":1000}}'
 
 :query_account:
   :method: post
@@ -39,27 +40,65 @@
     <<: *common_headers
   :body: '{"query":"query Routes($id_0:ID!) {node(id:$id_0) {id,__typename,...F1}} fragment F0 on Account {isRetirement,achTransferLimit,lastAchRelationship {id,nickname,__typename},balance {totalValue {value}},id} fragment F1 on Account {registration,id,...F0}","variables":{"id_0":"<<<account_id>>>"}}'
 
+:query_bank_id:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Accept: '*/*'
+    :Referer: https://dashboard.m1finance.com/d/invest/portfolio
+    :Authorization: Bearer <<<token>>>
+    <<: *common_headers
+  :body: '{"query":"query Routes($id_0:ID!) {node(id:$id_0) {id,__typename,...F1}} fragment F0 on Account {isLiquidating,lastAchRelationship {__typename,status,isActive,id},id} fragment F1 on Account {id,...F0}","variables":{"id_0":"<<<account_id>>>"}}'
+
+:query_account_detail:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Accept: '*/*'
+    :Referer: https://dashboard.m1finance.com/d/funding
+    :Authorization: Bearer <<<token>>>
+    <<: *common_headers
+  :body: '{"query":"query Routes($id_0:ID!,$first_1:Int!,$number_2:Int!) {node(id:$id_0) {id,__typename,...Fc}} fragment F0 on AchRelationshipViaLink {toExternalAccount {id,name,accountNumber,institutionCode},id} fragment F1 on AchRelationshipViaDeposits {id,nickname,bankAccountNumber,bankAccountType} fragment F2 on AchRelationship {__typename,id,internalId,rejectionReason,nickname,...F0,...F1} fragment F3 on AchRelationship {__typename,id,isActive} fragment F4 on AchRelationship {id,isActive,__typename} fragment F5 on Account {id,balance {cash {available}},maxCashThreshold} fragment F6 on Account {id,status,isRetirement,isLiquidating,balance {totalValue {hasValue}}} fragment F7 on Account {id,fundingTotals {totalsByYear {year,totalDeposits,totalWithdrawals}}} fragment F8 on Account {iraContributionTotals {totalsByYear {year,totalContribution,maxContribution}},id} fragment F9 on Account {isRetirement,id,...F7,...F8} fragment Fa on Account {nickname,id} fragment Fb on Account {id,registration,isRetirement,balance {margin {availableForWithdrawal}},_achTransfers:achTransfers(first:$first_1) {pageInfo {hasNextPage,hasPreviousPage},edges {node {__typename,id,direction,status,isComplete,isCreatedBySchedule,amount,contributionYear,forLiquidation,lastUpdate,viaAchRelationship {id,nickname,__typename}},cursor}},_achTransferSchedules1pTWSD:achTransferSchedules(first:$first_1) {pageInfo {hasNextPage,hasPreviousPage},edges {node {__typename,id,isDeposit,amount,description {description,_nextInstances1zNmZ6:nextInstances(number:$number_2,ofTrading:true,inTradingTimezone:true)},viaAchRelationship {id,nickname,__typename}},cursor}},...Fa} fragment Fc on Account {id,status,balance {totalValue {value}},lastAchRelationship {__typename,id,...F2,...F3,...F4},...F5,...F6,...F9,...Fb}","variables":{"id_0":"<<<account_id>>>","first_1":8,"number_2":10}}'
+
 :deposit:
-  :method:
+  :method: post
   :url: *base_url
   :headers:
     :Accept: application/json
     :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
     :Authorization: Bearer <<<token>>>
-  :body: '{"query":"mutation CreateImmediateAchDeposit($input_0:CreateImmediateAchDepositInput!,$first_1:Int!) {createImmediateAchDeposit(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {lastAchRelationship {__typename,status,id,isActive,nickname},id,rootPortfolioSlice {id},estimatedTrading {id,hasTrades},_achTransferSchedules2RSrrY:achTransferSchedules(first:$first_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}}} fragment F1 on CreateImmediateAchDepositPayload {account {id,...F0}} fragment F2 on CreateImmediateAchDepositPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","amount":"<<<deposit_amount>>>","clientMutationId":"1"},"first_1":1}}'
+    <<: *common_headers
+  :body: '{"query":"mutation CreateImmediateAchDeposit($input_0:CreateImmediateAchDepositInput!,$first_1:Int!) {createImmediateAchDeposit(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {lastAchRelationship {__typename,status,id,isActive,nickname},id,rootPortfolioSlice {id},estimatedTrading {id,hasTrades},_achTransferSchedules2RSrrY:achTransferSchedules(first:$first_1) {edges {node {id},cursor},pageInfo {hasNextPage,hasPreviousPage}}} fragment F1 on CreateImmediateAchDepositPayload {account {id,...F0}} fragment F2 on CreateImmediateAchDepositPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","amount":"<<<amount>>>","clientMutationId":"1"},"first_1":1}}'
 
 :cancel_deposit:
-  :method:
+  :method: post
   :url: *base_url
   :headers:
     :Accept: application/json
-    :Referer: https://dashboard.m1finance.com/d/c/deposit-funds
+    :Referer: https://dashboard.m1finance.com/d/funding
     :Authorization: Bearer <<<token>>>
-  :body: ''
+    <<: *common_headers
+  :body: '{"query":"mutation CancelAchTransfer($input_0:CancelAchTransferInput!,$first_1:Int!) {cancelAchTransfer(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {id,isLiquidating,_achTransfers1iwpJk:achTransfers(first:$first_1) {pageInfo {hasNextPage,hasPreviousPage},edges {node {__typename,id,direction,status,isComplete,isCreatedBySchedule,amount,contributionYear,forLiquidation,lastUpdate,viaAchRelationship {id,nickname,__typename}},cursor}}} fragment F1 on CancelAchTransferPayload {account {id,...F0}} fragment F2 on CancelAchTransferPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","achTransferId":"<<<transfer_id>>>","clientMutationId":"2"},"first_1":8}}'
 
-:check_status:
-  :method:
+:withdraw:
+  :method: post
   :url: *base_url
+  :headers:
+    :Accept: application/json
+    :Referer: https://dashboard.m1finance.com/d/c/withdraw-funds/confirm
+    :Authorization: Bearer <<<token>>>
+    <<: *common_headers
+  :body: '{"query":"mutation CreateImmediateAchWithdrawal($input_0:CreateImmediateAchWithdrawalInput!) {createImmediateAchWithdrawal(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {id} fragment F1 on CreateImmediateAchWithdrawalPayload {achTransferEdge {cursor,__typename,node {__typename,id,direction,status,isComplete,isCreatedBySchedule,amount,contributionYear,forLiquidation,lastUpdate,viaAchRelationship {id,nickname,__typename}}},account {id,...F0}} fragment F2 on CreateImmediateAchWithdrawalPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","amount":"<<<amount>>>","clientMutationId":"3"}}}'
+
+:cancel_withdraw:
+  :method: post
+  :url: *base_url
+  :headers:
+    :Accept: application/json
+    :Referer: https://dashboard.m1finance.com/d/funding
+    :Authorization: Bearer <<<token>>>
+    <<: *common_headers
+  :body: '{"query":"mutation CancelAchTransfer($input_0:CancelAchTransferInput!,$first_1:Int!) {cancelAchTransfer(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Account {id,isLiquidating,_achTransfers1iwpJk:achTransfers(first:$first_1) {pageInfo {hasNextPage,hasPreviousPage},edges {node {__typename,id,direction,status,isComplete,isCreatedBySchedule,amount,contributionYear,forLiquidation,lastUpdate,viaAchRelationship {id,nickname,__typename}},cursor}}} fragment F1 on CancelAchTransferPayload {account {id,...F0}} fragment F2 on CancelAchTransferPayload {result {didSucceed,inputError}}","variables":{"input_0":{"accountId":"<<<account_id>>>","achRelationshipId":"<<<bank_id>>>","achTransferId":"<<<transfer_id>>>","clientMutationId":"4"},"first_1":8}}'
 
 :test_get:
   :method: get

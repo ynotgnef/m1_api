@@ -1,5 +1,4 @@
 require 'spec_helper'
-require_relative '../lib/m1_api.rb'
 require_relative '../lib/m1_api/yaml_helpers.rb'
 
 RSpec.describe YamlHelpers do
@@ -74,57 +73,31 @@ RSpec.describe YamlHelpers do
     end
   end  
 
+  describe '.call_api_from_config' do
+    context 'api call defined in hash' do
+      configs = YamlHelpers.load_yaml('./lib/m1_api/api_configs.yml')
+      credentials = { username: 'username', password: 'password' }
+      output = YamlHelpers.call_api_from_config(configs, :authenticate, credentials)
+      it 'makes a post call' do
+        expect(output[:code]).to eq 200
+      end
+      it 'perserves the original hash' do
+        expect(configs[:authenticate][:body].match?(/<<<username>>>/)).to eq true
+      end
+    end
+  end
+
   describe '.call_api_from_yml' do
     context 'api call configs in yaml file' do
       it 'makes a get call' do
-        output = YamlHelpers.call_api_from_yml('./lib/m1_api/api_configs.yml', 'test_get')
+        output = YamlHelpers.call_api_from_yml('./lib/m1_api/api_configs.yml', :test_get)
         expect(output[:code]).to eq 200
       end
       it 'makes a post call' do
         credentials = { username: 'username', password: 'password' }
-        output = YamlHelpers.call_api_from_yml('./lib/m1_api/api_configs.yml', 'authenticate', credentials)
+        output = YamlHelpers.call_api_from_yml('./lib/m1_api/api_configs.yml', :authenticate, credentials)
         expect(output[:code]).to eq 200
       end
     end
   end
-end
-
-RSpec.describe M1API do
-
-  M1 = M1API.new(ENV['M1_USERNAME'], ENV['M1_PASSWORD'])
-
-  describe '.read_credentials' do
-    context 'user has valid credentials' do
-      credentials_file = './spec/credentials.yml'
-      it 'reads credentials from file' do
-        credentials = M1API.read_credentials(credentials_file)
-        expect(credentials[:username].is_a?(String)).to eq true
-        expect(credentials[:password].is_a?(String)).to eq true
-      end
-      it 'reads credentials from ENV' do
-        credentials = M1API.read_credentials
-        expect(credentials[:username]).to be_instance_of(String)
-        expect(credentials[:password]).to be_instance_of(String)
-      end
-    end
-  end
-
-  describe '#new' do
-    context 'user has initialized instance of M1 class' do
-      it 'M1 instance contains auth token' do
-        expect(M1.token).to be_instance_of(String)
-      end
-    end
-  end
-
-  describe '#query_accounts' do
-    context 'user has valid credentials defined in ENV' do
-      it 'outputs a list of accounts associated with the account' do
-        output = M1.query_accounts
-        output.each do |id, data|
-          expect(id).to eq data['id']
-        end
-      end
-    end
-  end  
 end
