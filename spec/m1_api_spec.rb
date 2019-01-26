@@ -68,7 +68,7 @@ RSpec.describe M1API do
       amount = "1.#{rand(0..99)}"
 
       it 'gets a success response on deposit' do # should check beforehand to see if deposit is even possible
-        output = m1.deposit('deposit', account_id, bank_id, amount)
+        output = m1.deposit(account_id, bank_id, amount)
         expect(output[:body]['data']['createImmediateAchDeposit']['result']['didSucceed']).to eq true
       end
 
@@ -80,7 +80,7 @@ RSpec.describe M1API do
 
       it 'gets a success response on cancel' do
         transfer_id = m1.accounts_detail[account_id][:transfers][0]['node']['id']
-        output = m1.deposit('cancel', account_id, bank_id, transfer_id)
+        output = m1.deposit(account_id, bank_id, transfer_id, true)
         expect(output[:body]['data']['cancelAchTransfer']['result']['didSucceed']).to eq true
       end
 
@@ -95,7 +95,7 @@ RSpec.describe M1API do
       amount = "1.#{rand(0..99)}"
 
       it 'gets a success response on withdraw' do # should check beforehand to see if withdraw is even possible
-        output = m1.withdraw('withdraw', account_id, bank_id, amount)
+        output = m1.withdraw(account_id, bank_id, amount)
         expect(output[:body]['data']['createImmediateAchWithdrawal']['result']['didSucceed']).to eq true
       end
 
@@ -107,7 +107,7 @@ RSpec.describe M1API do
 
       it 'gets a success response on cancel' do
         transfer_id = m1.accounts_detail[account_id][:transfers][0]['node']['id']
-        output = m1.withdraw('cancel', account_id, bank_id, transfer_id)
+        output = m1.withdraw(account_id, bank_id, transfer_id, true)
         expect(output[:body]['data']['cancelAchTransfer']['result']['didSucceed']).to eq true
       end
 

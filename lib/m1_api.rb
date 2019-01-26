@@ -63,29 +63,23 @@ class M1API
     @accounts_detail
   end
 
-  def deposit(action, account_id, bank_id, transaction)
-    case action
-    when 'deposit'
-      data = { token: @token, account_id: account_id, bank_id: bank_id, amount: transaction }
-      YamlHelpers.call_api_from_config(@api_configs, :deposit, data)
-    when 'cancel'
+  def deposit(account_id, bank_id, transaction, cancel = false)
+    if cancel
       data = { token: @token, account_id: account_id, bank_id: bank_id, transfer_id: transaction }
       YamlHelpers.call_api_from_config(@api_configs, :cancel_deposit, data)
     else
-      output "Invalid deposit action: '#{action}'"
+      data = { token: @token, account_id: account_id, bank_id: bank_id, amount: transaction }
+      YamlHelpers.call_api_from_config(@api_configs, :deposit, data)
     end
   end
 
-  def withdraw(action, account_id, bank_id, transaction)
-    case action
-    when 'withdraw'
-      data = { token: @token, account_id: account_id, bank_id: bank_id, amount: transaction }
-      YamlHelpers.call_api_from_config(@api_configs, :withdraw, data)
-    when 'cancel'
+  def withdraw(account_id, bank_id, transaction, cancel = false)
+    if cancel
       data = { token: @token, account_id: account_id, bank_id: bank_id, transfer_id: transaction }
       YamlHelpers.call_api_from_config(@api_configs, :cancel_withdraw, data)
     else
-      output "Invalid withdraw action: '#{action}'"
+      data = { token: @token, account_id: account_id, bank_id: bank_id, amount: transaction }
+      YamlHelpers.call_api_from_config(@api_configs, :withdraw, data)
     end
   end
 end
